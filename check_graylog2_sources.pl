@@ -98,6 +98,10 @@ if (($json_response->{total}) < ($np->opts->sources)) {
 
     }
 
+} elsif (($json_response->{total}) > ($np->opts->sources)) {
+
+    $np->nagios_exit(WARNING,"There is more sources than you think!!! | total_sources=$json_response->{total}\n");
+
 } else {
 
     $np->nagios_exit(OK,"All hosts sources are logging well | total_sources=$json_response->{total}\n");
