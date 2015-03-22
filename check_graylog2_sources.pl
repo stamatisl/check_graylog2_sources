@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 # This is a simple script to check gralog2 number of sources
-# Copyright STAMATIS LITINAKIS 20/03/2015
+# Copyright Stamatis Litinakis 20/03/2015
 
 use warnings;
 use strict;
