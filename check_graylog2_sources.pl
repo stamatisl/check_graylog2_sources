@@ -9,6 +9,7 @@ use LWP::UserAgent;
 use JSON;
 use Nagios::Plugin;
 use Data::Dumper;
+use Array::Utils qw(:all);
 
 my $np = Nagios::Plugin->new( 
         shortname => "GRAYLOG SOURCES",
@@ -81,21 +82,34 @@ if ($np->opts->verbose) { (print Dumper ($ua . "\n"))};
 
 my $response;
 $response = $ua->request(GET "http://" . $np->opts->host . ":" . $np->opts->port . "/sources?range=" . (($np->opts->time)*60)*60);
-
-if ($np->opts->verbose) { (print($response->content . "\n")) };
-
+if ($np->opts->verbose) { (print "\n" . $response->content . "\n\nFrom: http://" . $np->opts->host . ":" . $np->opts->port . "/sources?range=" . ((($np->opts->time)*60)*60) . "\n\n") };
 my $json_response = decode_json($response->content);
 
 if (($json_response->{total}) < ($np->opts->sources)) {
+
+my $response2;
+$response2 = $ua->request(GET "http://" . $np->opts->host . ":" . $np->opts->port . "/sources?range=" . (((($np->opts->time)*60)*60)+86400));  
+if ($np->opts->verbose) { (print "\n" . $response2->content . "\n\nFrom: http://" . $np->opts->host . ":" . $np->opts->port . "/sources?range=" . (((($np->opts->time)*60)*60)+86400) . "\n\n") };
+my $json_response2 = decode_json($response2->content);
+
+    my @y= (keys $json_response->{sources});
+    my @z= (keys $json_response2->{sources});
+
+        foreach my $key (keys $json_response->{sources}) {
+            push(@y,"\"" . $key . "\"\,");
+        }
+        foreach my $key (keys $json_response2->{sources}) {
+            push(@z,"\"" . $key ."\"\,");
+        }
+
+    @y = sort @y;
+    @z = sort @z;
+    my @i = array_diff(@z,@y);
     
     if (($json_response->{total}) <= (($np->opts->sources) - $np->opts->critical)) {
-    
-         $np->nagios_exit(CRITICAL,"Some hosts sources is misssing! | total_sources=$json_response->{total}\n");
-    
+         $np->nagios_exit(CRITICAL,"Missing " . (($np->opts->sources)-($json_response->{total})) . " hosts: @i are possible misssing! | total_sources=$json_response->{total}\n");
     } elsif (($json_response->{total}) <= (($np->opts->sources) - $np->opts->warning)) {    
- 
-         $np->nagios_exit(WARNING,"A host source is misssing! | total_sources=$json_response->{total}\n");
-
+         $np->nagios_exit(WARNING,"Missing " . (($np->opts->sources)-($json_response->{total})) . " hosts: @i are possible misssing! | total_sources=$json_response->{total}\n");
     }
 
 } elsif (($json_response->{total}) > ($np->opts->sources)) {
