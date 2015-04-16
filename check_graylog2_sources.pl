@@ -114,7 +114,26 @@ my $json_response2 = decode_json($response2->content);
 
 } elsif (($json_response->{total}) > ($np->opts->sources)) {
 
-    $np->nagios_exit(WARNING,"There is more sources than you think!!! | total_sources=$json_response->{total}\n");
+my $response2;
+$response2 = $ua->request(GET "http://" . $np->opts->host . ":" . $np->opts->port . "/sources?range=" . (((($np->opts->time)-2)*60)*60));
+if ($np->opts->verbose) { (print "\n" . $response2->content . "\n\nFrom: http://" . $np->opts->host . ":" . $np->opts->port . "/sources?range=" . (((($np->opts->time)-2)*60)*60) . "\n\n") };
+my $json_response2 = decode_json($response2->content);
+
+    my @y= (keys $json_response->{sources});
+    my @z= (keys $json_response2->{sources});
+
+        foreach my $key (keys $json_response->{sources}) {
+            push(@y,"\"" . $key . "\"\,");
+        }
+        foreach my $key (keys $json_response2->{sources}) {
+            push(@z,"\"" . $key ."\"\,");
+        }                  
+
+    @y = sort @y; 
+    @z = sort @z;
+    my @i = array_diff(@z,@y);
+
+    $np->nagios_exit(WARNING,"There is more sources than you think!!! Latest hosts added: @i | total_sources=$json_response->{total}\n");
 
 } else {
 
