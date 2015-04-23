@@ -111,15 +111,9 @@ if (($json_response->{total}) < ($json_response2->{total})) {
          $np->nagios_exit(WARNING,"Missing " . (($json_response2->{total})-($json_response->{total})) . " host: @i is possible misssing! | total_sources=$json_response->{total}\n");
     }
 
-} elsif (($json_response->{total}) > ($json_response2->{total})) {
-
-
-    $np->nagios_exit(WARNING,"There is more sources than you think! (@i) | total_sources=$json_response->{total}\n");
-
 } else {
 
     $np->nagios_exit(OK,"All hosts sources are logging well | total_sources=$json_response->{total}\n");
 }
 
 $np->nagios_exit(UNKNOWN,"Can't read sources from Graylog2 JSON API");
-
